@@ -17,7 +17,7 @@ concurrency:
 # Set CUSTOM_DOMAIN to your domain (e.g. draft.zzarty.com) to serve at root.
 # Leave empty to serve at /<repo-name> on github.io.
 env:
-  CUSTOM_DOMAIN: ""
+  CUSTOM_DOMAIN: "draft.zzarty.com"
 
 jobs:
   build:
