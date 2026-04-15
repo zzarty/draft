@@ -14,20 +14,37 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Set CUSTOM_DOMAIN to your domain (e.g. draft.zzarty.com) to serve at root.
+# Leave empty to serve at /<repo-name> on github.io.
+env:
+  CUSTOM_DOMAIN: ""
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
-      - run: npm run build
-      - run: echo "draft.zzarty.com" > out/CNAME
+
+      - name: Build (custom domain)
+        if: env.CUSTOM_DOMAIN != ''
+        run: npm run build
+
+      - name: Build (github.io sub-path)
+        if: env.CUSTOM_DOMAIN == ''
+        run: BASE_PATH="/${{ github.event.repository.name }}" npm run build
+
+      - name: Write CNAME
+        if: env.CUSTOM_DOMAIN != ''
+        run: echo "$CUSTOM_DOMAIN" > out/CNAME
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -36,6 +53,8 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
