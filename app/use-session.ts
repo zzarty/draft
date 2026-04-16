@@ -97,6 +97,20 @@ export function useSessionStore() {
     }
   }, [currentIndex, files, syncUrlWindow]);
 
+  // Start / restart the interval. Called whenever playback state changes
+  // or after an advance resets timeLeft, ensuring the first tick is a full second.
+  const startTimer = useCallback(() => {
+    clearTimer();
+    if (!isPlaying || !sessionActive) return;
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) return 0;
+        if (prev <= 4 && prev > 1) playBeep();
+        return prev - 1;
+      });
+    }, 1000);
+  }, [isPlaying, sessionActive, clearTimer]);
+
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => {
       const len = files.length;
@@ -114,15 +128,15 @@ export function useSessionStore() {
       return next;
     });
     setTimeLeft(settings.duration);
-    // clearTimer + startTimer will be called by the effect that watches timeLeft
-    // but for manual advances (button/keyboard) we restart here directly.
-    clearTimer();
-  }, [files.length, settings.loop, settings.duration, clearTimer]);
+    // Restart timer so the first tick is a full second from now
+    startTimer();
+  }, [files.length, settings.loop, settings.duration, clearTimer, startTimer]);
 
   const goToPrev = useCallback(() => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
     setTimeLeft(settings.duration);
-  }, [settings.duration]);
+    startTimer();
+  }, [settings.duration, startTimer]);
 
   const togglePlay = useCallback(() => {
     setIsPlaying((prev) => !prev);
@@ -183,20 +197,6 @@ export function useSessionStore() {
     clearTimer();
     setTimeLeft(settings.duration);
   }, [clearTimer, settings.duration]);
-
-  // Start / restart the interval. Called whenever playback state changes
-  // or after an advance resets timeLeft, ensuring the first tick is a full second.
-  const startTimer = useCallback(() => {
-    clearTimer();
-    if (!isPlaying || !sessionActive) return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) return 0;
-        if (prev <= 4 && prev > 1) playBeep();
-        return prev - 1;
-      });
-    }, 1000);
-  }, [isPlaying, sessionActive, clearTimer]);
 
   // Restart interval when play state changes
   useEffect(() => {
