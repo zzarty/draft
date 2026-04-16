@@ -89,7 +89,7 @@ export function DurationPicker({
           <input
             ref={inputRef}
             type="text"
-            inputMode="numeric"
+            inputMode="text"
             value={customValue}
             placeholder="e.g. 45s, 2m"
             onChange={(e) => setCustomValue(e.target.value)}
