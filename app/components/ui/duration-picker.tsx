@@ -4,25 +4,35 @@ import { useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { TIMER_PRESETS } from "@/app/use-session";
 
-/** Parse "30", "30s", "2m" → seconds, or null if invalid */
+/** Parse "30", "30s", "2m", "5m 30s" → seconds, or null if invalid */
 function parseDuration(raw: string): number | null {
   const trimmed = raw.trim().toLowerCase();
   if (!trimmed) return null;
 
-  const match = trimmed.match(/^(\d+)\s*(m|s)?$/);
-  if (!match) return null;
+  // (?:(\d+)\s*m)? - опциональные минуты (число + 'm')
+  // \s*            - возможный пробел между минутами и секундами
+  // (?:(\d+)\s*s?)?- опциональные секунды (число + 's' или просто число)
+  const match = trimmed.match(/^(?:(\d+)\s*m)?\s*(?:(\d+)\s*s?)?$/);
+  
+  if (!match || (!match[1] && !match[2])) return null;
 
-  const num = parseInt(match[1], 10);
-  const unit = match[2] ?? "s";
-  const seconds = unit === "m" ? num * 60 : num;
+  const minutes = match[1] ? parseInt(match[1], 10) : 0;
+  const seconds = match[2] ? parseInt(match[2], 10) : 0;
 
-  if (seconds < 5 || seconds > 3600) return null;
-  return seconds;
+  const totalSeconds = minutes * 60 + seconds;
+
+  if (totalSeconds < 5 || totalSeconds > 3600) return null;
+  return totalSeconds;
 }
 
 function formatCustom(seconds: number): string {
-  if (seconds >= 60 && seconds % 60 === 0) return seconds / 60 + "m";
-  return seconds + "s";
+  if (seconds < 60) return `${seconds}s`;
+  
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  
+  if (s === 0) return `${m}m`;
+  return `${m}m ${s}s`; // 330 секунд отформатируются как "5m 30s"
 }
 
 interface DurationPickerProps {
