@@ -25,9 +25,9 @@ export function parseDuration(raw: string): number | null {
   const trimmed = raw.trim().toLowerCase();
   if (!trimmed) return null;
 
-  // (?:(\d+)\s*m)? - опциональные минуты (число + 'm')
-  // \s*            - возможный пробел между минутами и секундами
-  // (?:(\d+)\s*s?)?- опциональные секунды (число + 's' или просто число)
+  // (?:(\d+)\s*m)? - optional minutes (number + 'm')
+  // \s*            - optional whitespace between minutes and seconds
+  // (?:(\d+)\s*s?)? - optional seconds (number + 's' or just a number)
   const match = trimmed.match(/^(?:(\d+)\s*m)?\s*(?:(\d+)\s*s?)?$/);
 
   if (!match || (!match[1] && !match[2])) return null;
