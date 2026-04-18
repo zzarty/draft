@@ -3,37 +3,7 @@
 import { useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { TIMER_PRESETS } from "@/app/use-session";
-
-/** Parse "30", "30s", "2m", "5m 30s" → seconds, or null if invalid */
-function parseDuration(raw: string): number | null {
-  const trimmed = raw.trim().toLowerCase();
-  if (!trimmed) return null;
-
-  // (?:(\d+)\s*m)? - опциональные минуты (число + 'm')
-  // \s*            - возможный пробел между минутами и секундами
-  // (?:(\d+)\s*s?)?- опциональные секунды (число + 's' или просто число)
-  const match = trimmed.match(/^(?:(\d+)\s*m)?\s*(?:(\d+)\s*s?)?$/);
-  
-  if (!match || (!match[1] && !match[2])) return null;
-
-  const minutes = match[1] ? parseInt(match[1], 10) : 0;
-  const seconds = match[2] ? parseInt(match[2], 10) : 0;
-
-  const totalSeconds = minutes * 60 + seconds;
-
-  if (totalSeconds < 5 || totalSeconds > 3600) return null;
-  return totalSeconds;
-}
-
-function formatCustom(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  
-  if (s === 0) return `${m}m`;
-  return `${m}m ${s}s`; // 330 секунд отформатируются как "5m 30s"
-}
+import { parseDuration, formatCustomDuration } from "@/lib/utils";
 
 interface DurationPickerProps {
   duration: number;
@@ -51,7 +21,7 @@ export function DurationPicker({
   const isPreset = TIMER_PRESETS.some((preset) => preset.value === duration);
 
   const startEditing = () => {
-    setCustomValue(isPreset ? "" : formatCustom(duration));
+    setCustomValue(isPreset ? "" : formatCustomDuration(duration));
     setEditing(true);
     window.setTimeout(() => {
       inputRef.current?.focus();
@@ -121,7 +91,7 @@ export function DurationPicker({
               : "glass text-muted-foreground hover:bg-white/6 hover:text-foreground")
           }
         >
-          {!isPreset ? formatCustom(duration) : <><Pencil className="h-3 w-3" /> Custom</>}
+          {!isPreset ? formatCustomDuration(duration) : <><Pencil className="h-3 w-3" /> Custom</>}
         </button>
       )}
     </div>
