@@ -6,8 +6,11 @@ export default defineConfig({
     environment: "node",
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "."),
-    },
+    alias: [
+      {
+        find: /^@\//,
+        replacement: `${path.resolve(__dirname, ".")}/`,
+      },
+    ],
   },
 });
